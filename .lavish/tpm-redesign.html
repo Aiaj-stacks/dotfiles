@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPM Launchpad — Redesign Proposal</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  body { font-family: 'Inter', sans-serif; }
+  code, pre { font-family: 'JetBrains Mono', monospace; }
+  .phase-card { transition: all 0.2s ease; }
+  .phase-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+  .track-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .gradient-bar { height: 4px; background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7, #d946ef); }
+  .comparison-table td { vertical-align: top; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table th { padding: 0.75rem 1rem; border-bottom: 2px solid #e5e7eb; }
+  .bg-grid { background-image: radial-gradient(circle, #e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div>
+      <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">TPM-transition</span>
+      <h1 class="text-xl font-bold text-gray-900">Redesign Proposal</h1>
+    </div>
+    <span class="text-sm text-gray-500">v2 &middot; Interactive Learning System</span>
+  </div>
+  <div class="gradient-bar"></div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-10 space-y-12">
+
+  <!-- WHY REDESIGN -->
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">What Was Built vs What You Need</h2>
+    <p class="text-gray-600 mb-6">The crewmate generated a solid static curriculum (all 52 weeks, full roadmap, weekly plans with exercises and checkpoints). But "solid static curriculum" isn't what will <em class="font-semibold">actually</em> get you from operations to TPM in 52 weeks.</p>
+    
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table class="comparison-table w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="text-left font-semibold w-1/4">Dimension</th>
+            <th class="text-left font-semibold text-gray-400">Static Curriculum (what was built)</th>
+            <th class="text-left font-semibold text-indigo-600">Interactive System (proposed)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-medium">Format</td>
+            <td class="text-gray-500">Markdown files you read</td>
+            <td class="text-indigo-700">A GitHub repo you <em>do</em> &mdash; code, tests, CI, commits</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Interactivity</td>
+            <td class="text-gray-500">None (static reading)</td>
+            <td class="text-indigo-700">pytest exercises, Anki spaced repetition, CI-verified progress</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Accountability</td>
+            <td class="text-gray-500">Self-reported checkpoint (easy to skip)</td>
+            <td class="text-indigo-700">Weekly commit required, CI checks pass or fail, progress dashboard</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Capstone</td>
+            <td class="text-gray-500">Deferred to weeks 41-52</td>
+            <td class="text-indigo-700">Builds incrementally from week 1 &mdash; portfolio piece by week 52</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Spaced Repetition</td>
+            <td class="text-gray-500">None (learn once, forget)</td>
+            <td class="text-indigo-700">Anki decks per phase, interleaved review weeks</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Learning Science</td>
+            <td class="text-gray-500">Linear read &rarr; practice</td>
+            <td class="text-indigo-700">Retrieval practice, interleaving, incremental project, mastery gates</td>
+          </tr>
+          <tr>
+            <td class="font-medium">TPM Artifacts</td>
+            <td class="text-gray-500">Abstract exercises</td>
+            <td class="text-indigo-700">Real specs, ADRs, risk registers, post-mortems, stakeholder decks</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Verification</td>
+            <td class="text-gray-500">Self-assessment (no answer key)</td>
+            <td class="text-indigo-700">Answer keys in a companion branch, tests verify code exercises</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- THE NEW DESIGN -->
+  <section>
+    <div class="flex items-center gap-3 mb-6">
+      <h2 class="text-2xl font-bold text-gray-900">The TPM Launchpad System</h2>
+      <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">Proposed</span>
+    </div>
+    <p class="text-gray-600 mb-8">Three parallel tracks every week. Each track produces real output &mdash; not just "learned" but <em class="font-semibold">done</em>.</p>
+
+    <!-- Three Tracks -->
+    <div class="grid md:grid-cols-3 gap-6 mb-10">
+      <div class="bg-white rounded-xl border border-blue-200 p-6 phase-card">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="track-dot bg-blue-500"></span>
+          <h3 class="font-bold text-lg text-blue-800">Code Track</h3>
+        </div>
+        <p class="text-sm text-gray-600 mb-3">3-4 hrs/week</p>
+        <p class="text-sm text-gray-700">Genuine programming proficiency. Python, git, APIs, databases, testing. Not "learn to code" &mdash; learn to read, review, estimate, and build.</p>
+        <div class="mt-3 text-xs text-gray-500 border-t border-gray-100 pt-3">
+          <strong class="text-gray-700">Outputs:</strong> Working code, passing tests, PRs reviewed, CI pipelines
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-purple-200 p-6 phase-card">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="track-dot bg-purple-500"></span>
+          <h3 class="font-bold text-lg text-purple-800">AI/Agent Track</h3>
+        </div>
+        <p class="text-sm text-gray-600 mb-3">1-2 hrs/week</p>
+        <p class="text-sm text-gray-700">Deep technical understanding of AI systems. Tokenization, transformers, function calling, agent loops, MCP, multi-agent systems. Not vibe coding.</p>
+        <div class="mt-3 text-xs text-gray-500 border-t border-gray-100 pt-3">
+          <strong class="text-gray-700">Outputs:</strong> Working agents, MCP servers, tool definitions, eval suites
+        </div>
+      </div>
+      <div class="bg-white rounded-xl border border-amber-200 p-6 phase-card">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="track-dot bg-amber-500"></span>
+          <h3 class="font-bold text-lg text-amber-800">TPM Track</h3>
+        </div>
+        <p class="text-sm text-gray-600 mb-3">2 hrs/week</p>
+        <p class="text-sm text-gray-700">The actual TPM craft. Roadmaps, stakeholder management, technical specs, risk registers, architecture reviews, post-mortems.</p>
+        <div class="mt-3 text-xs text-gray-500 border-t border-gray-100 pt-3">
+          <strong class="text-gray-700">Outputs:</strong> Tech specs, ADRs, program charters, stakeholder decks, risk registers
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Elements -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+      <h3 class="font-bold text-lg mb-4">What Makes It Interactive</h3>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+          <div class="text-lg font-bold text-indigo-600">1.</div>
+          <h4 class="font-semibold text-sm">pytest-Verified Exercises</h4>
+          <p class="text-xs text-gray-500 mt-1">Every code exercise has tests. Write code, run <code class="bg-gray-200 px-1 rounded">pytest</code>, get pass/fail immediately.</p>
+        </div>
+        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+          <div class="text-lg font-bold text-indigo-600">2.</div>
+          <h4 class="font-semibold text-sm">Anki Spaced Repetition</h4>
+          <p class="text-xs text-gray-500 mt-1">Pre-built Anki deck per phase. 10 min/day reviewing old material locks it in long-term.</p>
+        </div>
+        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+          <div class="text-lg font-bold text-indigo-600">3.</div>
+          <h4 class="font-semibold text-sm">CI-Verified Progress</h4>
+          <p class="text-xs text-gray-500 mt-1">GitHub Actions runs tests on every push. Green checkmark = you're on track. Red = review needed.</p>
+        </div>
+        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+          <div class="text-lg font-bold text-indigo-600">4.</div>
+          <h4 class="font-semibold text-sm">Progressive Capstone</h4>
+          <p class="text-xs text-gray-500 mt-1">One project that grows every week from a Python script to a full multi-agent system with frontend.</p>
+        </div>
+        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+          <div class="text-lg font-bold text-indigo-600">5.</div>
+          <h4 class="font-semibold text-sm">Answer Keys &amp; Rubrics</h4>
+          <p class="text-xs text-gray-500 mt-1">Every checkpoint has a reference answer. Every TPM artifact has a grading rubric for self-evaluation.</p>
+        </div>
+        <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+          <div class="text-lg font-bold text-indigo-600">6.</div>
+          <h4 class="font-semibold text-sm">Progress Dashboard</h4>
+          <p class="text-xs text-gray-500 mt-1">A static site (or CLI) showing weeks completed, tests passed, artifacts produced. Motivation + accountability.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE ROADMAP -->
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">52-Week Phased Roadmap</h2>
+    <p class="text-gray-600 mb-6">Six phases. Each phase has a <strong>coding project</strong>, an <strong>AI/agent milestone</strong>, and a <strong>TPM artifact</strong> deliverable.</p>
+
+    <div class="space-y-4">
+      <!-- Phase 1 -->
+      <details class="bg-white rounded-xl border border-gray-200 overflow-hidden" open>
+        <summary class="px-6 py-4 cursor-pointer font-bold text-lg flex items-center gap-3 hover:bg-gray-50">
+          <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">1</span>
+          Foundations (Weeks 1-8)
+          <span class="ml-auto text-sm font-normal text-gray-400">8 weeks &middot; 7 hrs/wk</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="border-l-4 border-blue-400 pl-4">
+              <span class="font-semibold text-blue-700 text-xs uppercase tracking-wider">Code Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Python: data types, functions, file I/O, OOP</li>
+                <li>&bull; Git: branching, merging, PR workflow</li>
+                <li>&bull; Terminal: bash, pipes, scripting</li>
+                <li>&bull; CLI tool + pytest (first capstone piece)</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-purple-400 pl-4">
+              <span class="font-semibold text-purple-700 text-xs uppercase tracking-wider">AI/Agent Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; What is an LLM? High-level mental model</li>
+                <li>&bull; Interacting with LLM APIs</li>
+                <li>&bull; Prompt engineering fundamentals</li>
+                <li>&bull; Week 8: Call an LLM from your CLI tool</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-amber-400 pl-4">
+              <span class="font-semibold text-amber-700 text-xs uppercase tracking-wider">TPM Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; What is a TPM? Role deep-dive</li>
+                <li>&bull; Tech spec template &amp; writing practice</li>
+                <li>&bull; How to review a PR (simulated)</li>
+                <li><strong class="text-amber-800">Artifact:</strong> Tech spec for your capstone</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bg-indigo-50 rounded-lg p-4 text-sm">
+            <span class="font-semibold text-indigo-700">Capstone seed:</span>
+            <span class="text-indigo-600">A CLI tool that does file operations + reports progress. By week 8, it also calls an LLM to summarize its output.</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- Phase 2 -->
+      <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <summary class="px-6 py-4 cursor-pointer font-bold text-lg flex items-center gap-3 hover:bg-gray-50">
+          <span class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-bold">2</span>
+          Technical Depth (Weeks 9-16)
+          <span class="ml-auto text-sm font-normal text-gray-400">8 weeks &middot; 7 hrs/wk</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="border-l-4 border-blue-400 pl-4">
+              <span class="font-semibold text-blue-700 text-xs uppercase tracking-wider">Code Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; HTTP, REST APIs, client libraries</li>
+                <li>&bull; Flask/FastAPI: build your own API</li>
+                <li>&bull; SQL, databases, data modeling</li>
+                <li>&bull; Architecture patterns overview</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-purple-400 pl-4">
+              <span class="font-semibold text-purple-700 text-xs uppercase tracking-wider">AI/Agent Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Tokenization (BPE algorithm)</li>
+                <li>&bull; Embeddings &amp; vector search</li>
+                <li>&bull; RAG architecture</li>
+                <li>&bull; Week 16: Add RAG to capstone</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-amber-400 pl-4">
+              <span class="font-semibold text-amber-700 text-xs uppercase tracking-wider">TPM Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; API design review process</li>
+                <li>&bull; System design document structure</li>
+                <li>&bull; Capacity planning basics</li>
+                <li><strong class="text-amber-800">Artifact:</strong> ADR for capstone API design</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bg-teal-50 rounded-lg p-4 text-sm">
+            <span class="font-semibold text-teal-700">Capstone grows:</span>
+            <span class="text-teal-600">CLI tool grows an API backend + database. Now it stores progress, exposes endpoints, and has a RAG-powered search feature.</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- Phase 3 -->
+      <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <summary class="px-6 py-4 cursor-pointer font-bold text-lg flex items-center gap-3 hover:bg-gray-50">
+          <span class="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-sm font-bold">3</span>
+          AI/ML Deep Dive (Weeks 17-24)
+          <span class="ml-auto text-sm font-normal text-gray-400">8 weeks &middot; 7 hrs/wk</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="border-l-4 border-blue-400 pl-4">
+              <span class="font-semibold text-blue-700 text-xs uppercase tracking-wider">Code Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; NumPy &amp; vector operations</li>
+                <li>&bull; scikit-learn basics</li>
+                <li>&bull; Data processing pipelines</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-purple-400 pl-4">
+              <span class="font-semibold text-purple-700 text-xs uppercase tracking-wider">AI/Agent Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Neural networks from scratch (NumPy)</li>
+                <li>&bull; Transformers &amp; attention mechanism</li>
+                <li>&bull; Training pipeline: pre-train, fine-tune, RLHF</li>
+                <li>&bull; Week 24: Fine-tune a small model (LoRA)</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-amber-400 pl-4">
+              <span class="font-semibold text-amber-700 text-xs uppercase tracking-wider">TPM Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Managing ML/AI programs</li>
+                <li>&bull; Model evaluation &amp; quality metrics</li>
+                <li>&bull; AI risk assessment framework</li>
+                <li><strong class="text-amber-800">Artifact:</strong> Model card + eval plan</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bg-orange-50 rounded-lg p-4 text-sm">
+            <span class="font-semibold text-orange-700">Capstone grows:</span>
+            <span class="text-orange-600">Adds ML-powered features: embedding-based recommendations, fine-tuned classification model, data pipeline for training.</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- Phase 4 -->
+      <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <summary class="px-6 py-4 cursor-pointer font-bold text-lg flex items-center gap-3 hover:bg-gray-50">
+          <span class="w-8 h-8 rounded-full bg-pink-100 text-pink-700 flex items-center justify-center text-sm font-bold">4</span>
+          Agentic AI (Weeks 25-32)
+          <span class="ml-auto text-sm font-normal text-gray-400">8 weeks &middot; 8 hrs/wk</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="border-l-4 border-blue-400 pl-4">
+              <span class="font-semibold text-blue-700 text-xs uppercase tracking-wider">Code Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; async Python, event loops</li>
+                <li>&bull; WebSockets, streaming</li>
+                <li>&bull; Containerization (Docker basics)</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-purple-400 pl-4">
+              <span class="font-semibold text-purple-700 text-xs uppercase tracking-wider">AI/Agent Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; ReAct loop implementation</li>
+                <li>&bull; Function calling internals</li>
+                <li>&bull; MCP protocol: build a server</li>
+                <li>&bull; Multi-agent orchestration</li>
+                <li>&bull; Agent evals &amp; guardrails</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-amber-400 pl-4">
+              <span class="font-semibold text-amber-700 text-xs uppercase tracking-wider">TPM Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Specifying agent system requirements</li>
+                <li>&bull; Agent architecture review</li>
+                <li>&bull; AI safety &amp; responsible AI for TPMs</li>
+                <li><strong class="text-amber-800">Artifact:</strong> Agent system spec + architecture diagram</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bg-pink-50 rounded-lg p-4 text-sm">
+            <span class="font-semibold text-pink-700">Capstone grows:</span>
+            <span class="text-pink-600">The capstone becomes an agent system: ReAct agent with tools, MCP server integration, multi-agent workflow for complex tasks.</span>
+          </div>
+        </div>
+      </details>
+
+      <!-- Phase 5 -->
+      <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <summary class="px-6 py-4 cursor-pointer font-bold text-lg flex items-center gap-3 hover:bg-gray-50">
+          <span class="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-bold">5</span>
+          TPM Craft (Weeks 33-40)
+          <span class="ml-auto text-sm font-normal text-gray-400">8 weeks &middot; 6 hrs/wk</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="border-l-4 border-blue-400 pl-4">
+              <span class="font-semibold text-blue-700 text-xs uppercase tracking-wider">Code Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; CI/CD pipelines (GitHub Actions)</li>
+                <li>&bull; Monitoring &amp; observability</li>
+                <li>&bull; Infrastructure as Code basics</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-purple-400 pl-4">
+              <span class="font-semibold text-purple-700 text-xs uppercase tracking-wider">AI/Agent Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Agent evaluation frameworks</li>
+                <li>&bull; Productionizing agents (deployment, monitoring)</li>
+                <li>&bull; AI governance &amp; compliance</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-amber-400 pl-4">
+              <span class="font-semibold text-amber-700 text-xs uppercase tracking-wider">TPM Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Roadmapping &amp; prioritization</li>
+                <li>&bull; Stakeholder management &amp; influence</li>
+                <li>&bull; Data-driven program management</li>
+                <li>&bull; Risk management &amp; decision frameworks</li>
+                <li><strong class="text-amber-800">Artifacts:</strong> Roadmap, risk register, stakeholder deck</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <!-- Phase 6 -->
+      <details class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <summary class="px-6 py-4 cursor-pointer font-bold text-lg flex items-center gap-3 hover:bg-gray-50">
+          <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">6</span>
+          Portfolio &amp; Launch (Weeks 41-52)
+          <span class="ml-auto text-sm font-normal text-gray-400">12 weeks &middot; 6-8 hrs/wk</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4 text-sm">
+            <div class="border-l-4 border-blue-400 pl-4">
+              <span class="font-semibold text-blue-700 text-xs uppercase tracking-wider">Code Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Finalize &amp; polish capstone</li>
+                <li>&bull; Deployment &amp; operations</li>
+                <li>&bull; Performance optimization</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-purple-400 pl-4">
+              <span class="font-semibold text-purple-700 text-xs uppercase tracking-wider">AI/Agent Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Agent system final integration</li>
+                <li>&bull; Eval suite for the full system</li>
+                <li>&bull; Technical AI presentation prep</li>
+              </ul>
+            </div>
+            <div class="border-l-4 border-amber-400 pl-4">
+              <span class="font-semibold text-amber-700 text-xs uppercase tracking-wider">TPM Track</span>
+              <ul class="mt-2 space-y-1 text-gray-600">
+                <li>&bull; Portfolio creation (GitHub + site)</li>
+                <li>&bull; Demo video &amp; presentation</li>
+                <li>&bull; Resume &amp; interview prep</li>
+                <li>&bull; Job search strategy</li>
+                <li><strong class="text-amber-800">Capstone:</strong> Full system + portfolio + resume</li>
+              </ul>
+            </div>
+          </div>
+          <div class="bg-indigo-50 rounded-lg p-4 text-sm">
+            <span class="font-semibold text-indigo-700">By week 52 you have:</span>
+            <span class="text-indigo-600">A live multi-agent system portfolio piece, a technical spec portfolio, a stakeholder management portfolio, a resume that shows TPM impact, and the ability to pass a TPM technical interview.</span>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- LEARNING MATERIALS -->
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Learning Mediums &amp; Materials</h2>
+    <p class="text-gray-600 mb-6">Not just links. A curated mix of formats optimized for retention and practical skill-building.</p>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <h3 class="font-semibold text-sm uppercase tracking-wider text-gray-500 mb-3">Primary Mediums</h3>
+        <ul class="space-y-3 text-sm">
+          <li class="flex items-start gap-3">
+            <span class="text-lg mt-0.5">&#x1F4BB;</span>
+            <div><strong class="text-gray-900">Interactive coding exercises</strong><br><span class="text-gray-500">pytest-verified Python exercises in every coding week</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-lg mt-0.5">&#x1F4C4;</span>
+            <div><strong class="text-gray-900">Real TPM artifact creation</strong><br><span class="text-gray-500">You write specs, ADRs, risk registers, post-mortems &mdash; not summaries of them</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-lg mt-0.5">&#x1F3A7;</span>
+            <div><strong class="text-gray-900">Curated video + reading pairs</strong><br><span class="text-gray-500">Watch a concept, then immediately apply it in an exercise</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-lg mt-0.5">&#x1F578;&#xFE0F;</span>
+            <div><strong class="text-gray-900">Spaced repetition (Anki)</strong><br><span class="text-gray-500">Pre-built decks: 10 min/day reviews everything from previous weeks</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="text-lg mt-0.5">&#x1F3AF;</span>
+            <div><strong class="text-gray-900">Self-assessment with rubrics</strong><br><span class="text-gray-500">Every TPM artifact has a grading rubric. Grade yourself honestly before moving on.</span></div>
+          </li>
+        </ul>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-xl p-5">
+        <h3 class="font-semibold text-sm uppercase tracking-wider text-gray-500 mb-3">Key Learning Resources</h3>
+        <ul class="space-y-3 text-sm">
+          <li class="flex items-start gap-3">
+            <span class="w-6 h-6 rounded bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">P</span>
+            <div><strong class="text-gray-900">Python.org tutorial &amp; Real Python</strong><br><span class="text-gray-500">Free, authoritative, interactive</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-6 h-6 rounded bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">A</span>
+            <div><strong class="text-gray-900">Anthropic &amp; OpenAI official docs</strong><br><span class="text-gray-500">Agent, function calling, MCP docs (primary, not third-party)</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-6 h-6 rounded bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3B</span>
+            <div><strong class="text-gray-900">3Blue1Brown &amp; Andrej Karpathy</strong><br><span class="text-gray-500">Deep visual explanations of neural nets, transformers, tokenization</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-6 h-6 rounded bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">O</span>
+            <div><strong class="text-gray-900">O'Reilly / Safari Books / MIT OCW</strong><br><span class="text-gray-500">Systems design, TPM craft, software architecture</span></div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-6 h-6 rounded bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">GH</span>
+            <div><strong class="text-gray-900">GitHub (real repos, PRs, Actions)</strong><br><span class="text-gray-500">Learn by doing in the actual tools TPMs use daily</span></div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT THE REPO LOOKS LIKE -->
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">What the Repo Looks Like</h2>
+    <p class="text-gray-600 mb-6">Not a folder of markdown files. A real project structure you interact with.</p>
+
+    <div class="bg-gray-900 rounded-xl p-6 overflow-x-auto">
+      <pre class="text-gray-300 text-sm leading-relaxed">
+<span class="text-green-400">tpm-transition/</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">README.md</span>        <span class="text-gray-600"># Your daily entry point</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">week/</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">01/</span>              <span class="text-gray-600"># Week 1: objectives, exercises, resources</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">02/</span>              <span class="text-gray-600"># Week 2: interleaved review of week 1</span>
+<span class="text-gray-600">│   └──</span> ...              <span class="text-gray-600"># All 52 weeks</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">capstone/</span>          <span class="text-gray-600"># The progressive project (starts week 1)</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">cli/</span>             <span class="text-gray-600"># CLI tool grows with each phase</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">api/</span>             <span class="text-gray-600"># API backend (weeks 9-16)</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">agent/</span>           <span class="text-gray-600"># Agent system (weeks 25-32)</span>
+<span class="text-gray-600">│   └──</span> <span class="text-blue-300">frontend/</span>        <span class="text-gray-600"># Dashboard UI (weeks 41-52)</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">artifacts/</span>         <span class="text-gray-600"># Your TPM deliverables</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">tech-specs/</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">adrs/</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">roadmaps/</span>
+<span class="text-gray-600">│   ├──</span> <span class="text-blue-300">risk-registers/</span>
+<span class="text-gray-600">│   └──</span> <span class="text-blue-300">post-mortems/</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">anki/</span>             <span class="text-gray-600"># Spaced repetition decks per phase</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">answers/</span>          <span class="text-gray-600"># Reference answers (separate review path)</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">.github/workflows/</span> <span class="text-gray-600"># CI: tests pass = you're on track</span>
+<span class="text-gray-600">├──</span> <span class="text-blue-300">AGENTS.md</span>
+<span class="text-gray-600">└──</span> <span class="text-blue-300">CLAUDE.md</span></pre>
+    </div>
+  </section>
+
+  <!-- THE PROGRESSIVE CAPSTONE -->
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">The Progressive Capstone: "AIAgentHub"</h2>
+    <p class="text-gray-600 mb-6">One project. 52 weeks. Starts as a Python script, ends as a deployed multi-agent system.</p>
+
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div class="p-6">
+        <div class="space-y-6">
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold shrink-0">wk8</div>
+            <div>
+              <h4 class="font-bold">CLI tool + LLM integration</h4>
+              <p class="text-sm text-gray-600">Python CLI that manages personal learning progress. Calls an LLM to summarize weekly notes. Git-tracked. Tests pass.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center text-lg font-bold shrink-0">wk16</div>
+            <div>
+              <h4 class="font-bold">API backend + database + RAG</h4>
+              <p class="text-sm text-gray-600">FastAPI server, Postgres/SQLite, user auth. RAG-powered search over your learning notes. Deployed via Docker.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center text-lg font-bold shrink-0">wk24</div>
+            <div>
+              <h4 class="font-bold">ML features + fine-tuned model</h4>
+              <p class="text-sm text-gray-600">Embedding-based recommendations, fine-tuned classification (LoRA) for categorizing learning resources. Evaluation pipeline.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center text-lg font-bold shrink-0">wk32</div>
+            <div>
+              <h4 class="font-bold">Multi-agent system with MCP</h4>
+              <p class="text-sm text-gray-600">ReAct agents with tool calling. MCP server for accessing learning data. Multi-agent workflow for complex tasks. Observability.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-green-100 text-green-700 flex items-center justify-center text-lg font-bold shrink-0">wk40</div>
+            <div>
+              <h4 class="font-bold">Production-hardened + monitored</h4>
+              <p class="text-sm text-gray-600">CI/CD pipeline, monitoring, error budgets, SLIs/SLOs. Infrastructure as Code. Full documentation suite.</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-16 h-16 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg font-bold shrink-0">wk52</div>
+            <div>
+              <h4 class="font-bold">Deployed portfolio piece</h4>
+              <p class="text-sm text-gray-600">Live system. Demo video. Architecture docs. Resume bullet. Interview-ready explanation of every design decision.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON TABLE -->
+  <section>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Current Assets vs New Direction</h2>
+    <p class="text-gray-600 mb-6">The static curriculum that was built has good content but in the wrong format. Here's what we keep, what we transform.</p>
+
+    <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <table class="comparison-table w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="text-left font-semibold">Asset</th>
+            <th class="text-left font-semibold">Status</th>
+            <th class="text-left font-semibold">Plan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-medium">Week markdown files (1-52)</td>
+            <td><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">Keep Structure</span></td>
+            <td class="text-gray-600">Flatten into <code>week/01/</code> dirs. Content becomes the "reference" layer. Add exercise specs, answer keys, Anki card lists.</td>
+          </tr>
+          <tr>
+            <td class="font-medium">roadmap.json</td>
+            <td><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">Keep</span></td>
+            <td class="text-gray-600">Good dependency graph. Extend with exercise IDs, test references, artifact references.</td>
+          </tr>
+          <tr>
+            <td class="font-medium">README.md</td>
+            <td><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">Rewrite</span></td>
+            <td class="text-gray-600">Make it the daily entry point with progress tracking, quick-start, and links to current week.</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Exercises (static)</td>
+            <td><span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">Transform</span></td>
+            <td class="text-gray-600">Convert to pytest test files + starter code. Add CI that runs them. Add answer keys.</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Checkpoints (no answers)</td>
+            <td><span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">Add Answers</span></td>
+            <td class="text-gray-600">Create reference answers and grading rubrics in <code>answers/</code>.</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Capstone (deferred)</td>
+            <td><span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">Redesign</span></td>
+            <td class="text-gray-600">Make it progressive (starts week 1). Each phase adds to the same project.</td>
+          </tr>
+          <tr>
+            <td class="font-medium">TPM artifacts (requests)</td>
+            <td><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">Redesign</span></td>
+            <td class="text-gray-600">Replace "write a spec" with structured prompts + templates + rubrics. Output goes into <code>artifacts/</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- NEXT STEPS / CTA -->
+  <section class="bg-indigo-600 rounded-2xl p-8 text-white text-center">
+    <h2 class="text-2xl font-bold mb-3">Ready to Build This?</h2>
+    <p class="text-indigo-100 mb-6 max-w-xl mx-auto">The static curriculum is cancelled. This redesign turns the repo from something you read into something you <em class="font-semibold">do</em> &mdash; with tests, CI, spaced repetition, real artifacts, and a progressive capstone.</p>
+    <div class="flex items-center justify-center gap-4">
+      <span class="bg-indigo-500 rounded-lg px-4 py-2 text-sm">3 tracks running in parallel every week</span>
+      <span class="bg-indigo-500 rounded-lg px-4 py-2 text-sm">52 weeks, 6-8 hrs/wk</span>
+      <span class="bg-indigo-500 rounded-lg px-4 py-2 text-sm">Interactive, not static</span>
+    </div>
+    <div class="mt-8 text-sm text-indigo-200">
+      Approve this direction and I'll build the first phase + repo structure.
+    </div>
+  </section>
+</main>
+
+<footer class="border-t border-gray-200 py-6 text-center text-xs text-gray-400">
+  TPM-transition &middot; Proposed Redesign v2 &middot; July 2026
+</footer>
+
+</body>
+</html>

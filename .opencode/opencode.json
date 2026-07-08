@@ -1,0 +1,24 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/deepseek-v4-flash-free",
+  "plugin": [
+    "oh-my-opencode",
+    "opencode-vibeguard",
+    "opencode-dynamic-context-pruning",
+    "opencode-notifier",
+    "opencode-subagent-statusline",
+    "@cortexkit/opencode-magic-context",
+    "@mastra/opencode"
+  ],
+  "mcp": {
+    "openmemory": {
+      "type": "local",
+      "command": ["/home/rijve/.npm-global/bin/openmemory-js", "mcp"],
+      "enabled": true,
+      "environment": {
+        "OM_TIER": "hybrid",
+        "OM_DB_PATH": "/home/rijve/opencode-memory/openmemory.sqlite"
+      }
+    }
+  }
+}
